@@ -20,7 +20,7 @@ module.exports = function S3MediaProviderModule(pb) {
     //pb dependencies
     var util          = pb.util;
     var PluginService = pb.PluginService;
-    var Aws           = PluginService.require('s3-pencilblue', 'aws-sdk');
+    var Aws           = require('aws-sdk');
 
     /**
      * Media provider to upload files to S3
