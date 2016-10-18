@@ -31,6 +31,10 @@
         {
 			"name": "region",
 			"value": "us-east-1"
+        },
+        {
+            "name": "useIAMRoles",
+            "value": false
         }
 	],
 	"permissions": {
