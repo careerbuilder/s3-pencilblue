@@ -31,6 +31,10 @@
         {
 			"name": "region",
 			"value": "us-east-1"
+        },
+        {
+            "name": "useIAMRoles",
+            "value": false
         }
 	],
 	"permissions": {
@@ -41,8 +45,5 @@
 	},
 	"main_module": {
 		"path": "s3.js"
-	},
-    "dependencies": {
-        "aws-sdk": "2.0.15"
-    }
+	}
 }

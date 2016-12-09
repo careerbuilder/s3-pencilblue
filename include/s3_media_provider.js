@@ -50,7 +50,10 @@ module.exports = function S3MediaProviderModule(pb) {
             if (util.isError(err)) {
                 return cb(err);
             }
-
+            if(setts.useIAMRoles) {
+                delete setts.accessKeyId;
+                delete setts.secretAccessKey;
+            }
             Aws.config.update(setts);
             var client = new Aws.S3();
             cb(null, client, setts);
