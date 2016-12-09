@@ -16,7 +16,7 @@
 */
 
 module.exports = function S3MediaProviderModule(pb) {
-    
+
     //pb dependencies
     var util          = pb.util;
     var PluginService = pb.PluginService;
@@ -29,7 +29,7 @@ module.exports = function S3MediaProviderModule(pb) {
      * @implements MediaProvider
      */
     function S3MediaProvider() {
-        
+
         /**
          *
          * @property pluginService
@@ -41,9 +41,9 @@ module.exports = function S3MediaProviderModule(pb) {
     /**
      * Retrieves an instance of the Amazon S3 client
      * @method getClient
-     * @param {Function} cb A callback that provides parameters: The first an 
-     * error, if occurred.  The second is an S3 instance for interfacing with 
-     * Amazon S3.  The last parameter is the hash of the plugin settings.  
+     * @param {Function} cb A callback that provides parameters: The first an
+     * error, if occurred.  The second is an S3 instance for interfacing with
+     * Amazon S3.  The last parameter is the hash of the plugin settings.
      */
     S3MediaProvider.prototype.getClient = function(cb) {
         this.pluginService.getSettingsKV('s3-pencilblue', function(err, setts) {
@@ -58,13 +58,13 @@ module.exports = function S3MediaProviderModule(pb) {
     };
 
     /**
-     * Retrieves the item in S3 as a stream. 
+     * Retrieves the item in S3 as a stream.
      * @method getStream
-     * @param {String} mediaPath The path/key to the media.  Typically this is a 
+     * @param {String} mediaPath The path/key to the media.  Typically this is a
      * path such as: /media/2014/9/540a3ff0e30ddfb9e60000be-1409957872680.jpg
      * @param {Object} [options] Options for interacting with S3
      * @param {String} [options.bucket] The S3 bucket to interact with
-     * @param {Function} cb A callback that provides two parameters: An Error, if 
+     * @param {Function} cb A callback that provides two parameters: An Error, if
      * occurred and a ReadableStream that contains the media content.
      */
     S3MediaProvider.prototype.getStream = function(mediaPath, options, cb) {
@@ -108,11 +108,11 @@ module.exports = function S3MediaProviderModule(pb) {
     /**
      * Retrieves the content from S3 as a String or Buffer.
      * @method get
-     * @param {String} mediaPath The path/key to the media.  Typically this is a 
+     * @param {String} mediaPath The path/key to the media.  Typically this is a
      * path such as: /media/2014/9/540a3ff0e30ddfb9e60000be-1409957872680.jpg
      * @param {Object} [options] Options for interacting with S3
      * @param {String} [options.bucket] The S3 bucket to interact with
-     * @param {Function} cb A callback that provides two parameters: An Error, if 
+     * @param {Function} cb A callback that provides two parameters: An Error, if
      * occurred and an entity that contains the media content.
      */
     S3MediaProvider.prototype.get = function(mediaPath, options, cb) {
@@ -159,12 +159,12 @@ module.exports = function S3MediaProviderModule(pb) {
                 if (body instanceof Buffer || util.isString(body)) {
                     cb(null, body);
                 }
-                else { 
+                else {
                     //we assume (dangerously) that it is a stream
 
                     var file = '';
                     body.on('data', function(data) {
-                        file += data; 
+                        file += data;
                     })
                     .on('error', function(err) {
                         cb(err);
@@ -178,15 +178,15 @@ module.exports = function S3MediaProviderModule(pb) {
     };
 
     /**
-     * Sets media content into an S3 bucket based on the specified media path and 
+     * Sets media content into an S3 bucket based on the specified media path and
      * options.  The stream provided must be a ReadableStream.
      * @method setStream
      * @param {ReadableStream} stream The content stream
-     * @param {String} mediaPath The path/key to the media.  Typically this is a 
+     * @param {String} mediaPath The path/key to the media.  Typically this is a
      * path such as: /media/2014/9/540a3ff0e30ddfb9e60000be-1409957872680.jpg
      * @param {Object} [options] Options for interacting with S3
      * @param {String} [options.bucket] The S3 bucket to interact with
-     * @param {Function} cb A callback that provides two parameters: An Error, if 
+     * @param {Function} cb A callback that provides two parameters: An Error, if
      * occurred and the success of the operation.
      */
     S3MediaProvider.prototype.setStream = function(stream, mediaPath, options, cb) {
@@ -194,15 +194,15 @@ module.exports = function S3MediaProviderModule(pb) {
     };
 
     /**
-     * Sets media content into an S3 bucket based on the specified media path and 
+     * Sets media content into an S3 bucket based on the specified media path and
      * options.  The data must be in the form of a String or Buffer.
      * @method setStream
      * @param {String|Buffer|Stream} fileDataStrOrBuffOrStream The content to persist
-     * @param {String} mediaPath The path/key to the media.  Typically this is a 
+     * @param {String} mediaPath The path/key to the media.  Typically this is a
      * path such as: /media/2014/9/540a3ff0e30ddfb9e60000be-1409957872680.jpg
      * @param {Object} [options] Options for interacting with S3
      * @param {String} [options.bucket] The S3 bucket to interact with
-     * @param {Function} cb A callback that provides two parameters: An Error, if 
+     * @param {Function} cb A callback that provides two parameters: An Error, if
      * occurred and the success of the operation.
      */
     S3MediaProvider.prototype.set = function(fileDataStrOrBuffOrStream, mediaPath, options, cb) {
@@ -218,11 +218,13 @@ module.exports = function S3MediaProviderModule(pb) {
             if (util.isError(err)) {
                 return cb(err);
             }
-
             var params = {
                 Bucket: options.bucket || pb.config.media.bucket || settings.bucket, /* required */
                 Key: S3MediaProvider.mediaPathTransform(mediaPath), /* required */
                 Body: fileDataStrOrBuffOrStream,
+                Metadata: {
+                     references: "1"
+                }
     //            ACL: 'private | public-read | public-read-write | authenticated-read | bucket-owner-read | bucket-owner-full-control',
     //            CacheControl: options.cache'STRING_VALUE',
     //            ContentDisposition: 'STRING_VALUE',
@@ -254,12 +256,12 @@ module.exports = function S3MediaProviderModule(pb) {
     };
 
     /**
-     * Part of the interface but isn't used anywhere yet.  This implementation 
+     * Part of the interface but isn't used anywhere yet.  This implementation
      * throw an error because it is not implemented.
      * @method createWriteStream
-     * @param {String} mediaPath The path/key to the media.  Typically this is a 
+     * @param {String} mediaPath The path/key to the media.  Typically this is a
      * path such as: /media/2014/9/540a3ff0e30ddfb9e60000be-1409957872680.jpg
-     * @param {Function} cb A callback that provides two parameters: An Error, if 
+     * @param {Function} cb A callback that provides two parameters: An Error, if
      * occurred and a WriteableStream.
      */
     S3MediaProvider.prototype.createWriteStream = function(mediaPath, cb) {
@@ -269,25 +271,25 @@ module.exports = function S3MediaProviderModule(pb) {
     /**
      * Checks to see if the file actually exists in S3
      * @method exists
-     * @param {String} mediaPath The path/key to the media.  Typically this is a 
+     * @param {String} mediaPath The path/key to the media.  Typically this is a
      * path such as: /media/2014/9/540a3ff0e30ddfb9e60000be-1409957872680.jpg
-     * @param {Function} cb A callback that provides two parameters: An Error, if 
+     * @param {Function} cb A callback that provides two parameters: An Error, if
      * occurred and a Boolean.
      */
     S3MediaProvider.prototype.exists = function(mediaPath, cb) {
         this.stat(mediaPath, function(err, stat) {
-            cb(null, stat ? true : false); 
+            cb(null, stat ? true : false);
         });
     };
 
     /**
      * Deletes a file out of S3
      * @method delete
-     * @param {String} mediaPath The path/key to the media.  Typically this is a 
+     * @param {String} mediaPath The path/key to the media.  Typically this is a
      * path such as: /media/2014/9/540a3ff0e30ddfb9e60000be-1409957872680.jpg
      * @param {Object} [options] Options for interacting with S3
      * @param {String} [options.bucket] The S3 bucket to interact with
-     * @param {Function} cb A callback that provides two parameters: An Error, if 
+     * @param {Function} cb A callback that provides two parameters: An Error, if
      * occurred and the success of the operation.
      */
     S3MediaProvider.prototype.delete = function(mediaPath, options, cb) {
@@ -305,23 +307,91 @@ module.exports = function S3MediaProviderModule(pb) {
                 return cb(err);
             }
 
-            //set the options and remove the media
             var params = {
                 Bucket: options.bucket || pb.config.media.bucket || settings.bucket, /* required */
                 Key: S3MediaProvider.mediaPathTransform(mediaPath), /* required */
-    //            MFA: 'STRING_VALUE',
-    //            VersionId: 'STRING_VALUE'
+                //            MFA: 'STRING_VALUE',
+                //            VersionId: 'STRING_VALUE'
             };
-            s3.deleteObject(params, cb);
+
+            //retrieve metadata
+
+            s3.headObject(params, function(error, result) {
+                if(util.isError(error)) {
+                    return cb(error);
+                }
+
+                var metadata = result.Metadata || {};
+                var references = metadata.references;
+
+                //if references is undefined, delete because it hasn't been given metadata so it is not referenced elsewhere
+                if (!references || references === "1") {
+                    s3.deleteObject(params, cb);
+                } else {
+                    adjustReferencesCount(references, false, cb);
+                }
+            });
         });
     };
 
     /**
+     * Increments references metadata in S3 to account for copied over media data
+     * @method addReferences
+     * @param {String} mediaPath The path/key to the media.  Typically this is a
+     * path such as: /media/2014/9/540a3ff0e30ddfb9e60000be-1409957872680.jpg
+     * @param {Function} cb A callback that provides two parameters: An Error, if
+     * occurred and an entity that contains the media content.
+     */
+    S3MediaProvider.prototype.addReferences = function(mediaPath, cb) {
+        //retrieve the client
+        this.getClient(function(err, s3, settings) {
+            if(util.isError(err)) {
+                return cb(err);
+            }
+
+            var params = {
+                Bucket: pb.config.media.bucket || settings.bucket, /* required */
+                Key: S3MediaProvider.mediaPathTransform(mediaPath), /* required */
+                //            MFA: 'STRING_VALUE',
+                //            VersionId: 'STRING_VALUE'
+            };
+
+            //retrieve metadata
+            s3.headObject(params, function(error, result) {
+                if(util.isError(error)) {
+                    return cb(error);
+                }
+
+                var metadata = result.Metadata || {};
+                var references = metadata.references;
+
+                //if references is undefined, make references 1 because metadata hasn't been created yet so it only exists once
+                if (!references) {
+                    references = "1";
+                }
+                adjustReferencesCount(references, true, cb);
+            });
+        });
+    };
+
+    function adjustReferencesCount(references, shouldIncrement, cb) {
+        references = parseInt(references);
+        references = shouldIncrement ? (references + 1) : (references - 1);
+        references += "";
+        params.Metadata = {
+            references: references
+        };
+        params.MetadataDirective = 'REPLACE';
+        params.CopySource = encodeURI(params.Bucket + "/" + params.Key);
+        s3.copyObject(params, cb);
+    }
+
+    /**
      * Retrieve the stats on the file
      * @method stat
-     * @param {String} mediaPath The path/key to the media.  Typically this is a 
+     * @param {String} mediaPath The path/key to the media.  Typically this is a
      * path such as: /media/2014/9/540a3ff0e30ddfb9e60000be-1409957872680.jpg
-     * @param {Function} cb A callback that provides two parameters: An Error, if 
+     * @param {Function} cb A callback that provides two parameters: An Error, if
      * occurred and an object that contains the file stats
      */
     S3MediaProvider.prototype.stat = function(mediaPath, cb) {
