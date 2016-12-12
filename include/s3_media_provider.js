@@ -331,7 +331,7 @@ module.exports = function S3MediaProviderModule(pb) {
                 if (!references || references === "1") {
                     s3.deleteObject(params, cb);
                 } else {
-                    adjustReferencesCount(references, false, cb);
+                    adjustReferencesCount(s3, references, params, false, cb);
                 }
             });
         });
@@ -372,12 +372,12 @@ module.exports = function S3MediaProviderModule(pb) {
                 if (!references) {
                     references = "1";
                 }
-                adjustReferencesCount(references, true, cb);
+                adjustReferencesCount(s3, references, params, true, cb);
             });
         });
     };
 
-    function adjustReferencesCount(references, shouldIncrement, cb) {
+    function adjustReferencesCount(s3, references, params, shouldIncrement, cb) {
         references = parseInt(references);
         references = shouldIncrement ? (references + 1) : (references - 1);
         references += "";
