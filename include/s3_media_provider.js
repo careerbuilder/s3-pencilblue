@@ -221,11 +221,13 @@ module.exports = function S3MediaProviderModule(pb) {
             if (util.isError(err)) {
                 return cb(err);
             }
-
             var params = {
                 Bucket: options.bucket || pb.config.media.bucket || settings.bucket, /* required */
                 Key: S3MediaProvider.mediaPathTransform(mediaPath), /* required */
                 Body: fileDataStrOrBuffOrStream,
+                Metadata: {
+                     references: "1"
+                }
     //            ACL: 'private | public-read | public-read-write | authenticated-read | bucket-owner-read | bucket-owner-full-control',
     //            CacheControl: options.cache'STRING_VALUE',
     //            ContentDisposition: 'STRING_VALUE',
@@ -308,16 +310,86 @@ module.exports = function S3MediaProviderModule(pb) {
                 return cb(err);
             }
 
-            //set the options and remove the media
             var params = {
                 Bucket: options.bucket || pb.config.media.bucket || settings.bucket, /* required */
                 Key: S3MediaProvider.mediaPathTransform(mediaPath), /* required */
-    //            MFA: 'STRING_VALUE',
-    //            VersionId: 'STRING_VALUE'
+                //            MFA: 'STRING_VALUE',
+                //            VersionId: 'STRING_VALUE'
             };
-            s3.deleteObject(params, cb);
+
+            //retrieve metadata
+
+            s3.headObject(params, function(error, result) {
+                if(util.isError(error) || !result) {
+                    var err = error ? error : new Error('No results returned');
+                    return cb(err);
+                }
+
+                var metadata = result.Metadata || {};
+                var references = metadata.references;
+
+                //if references is undefined, delete because it hasn't been given metadata so it is not referenced elsewhere
+                if (!references || references === "1") {
+                    s3.deleteObject(params, cb);
+                } else {
+                    adjustReferencesCount(s3, references, params, false, cb);
+                }
+            });
         });
     };
+
+    /**
+     * Increments references metadata in S3 to account for copied over media data
+     * @method addReferences
+     * @param {String} mediaPath The path/key to the media.  Typically this is a
+     * path such as: /media/2014/9/540a3ff0e30ddfb9e60000be-1409957872680.jpg
+     * @param {Function} cb A callback that provides two parameters: An Error, if
+     * occurred and an entity that contains the media content.
+     */
+    S3MediaProvider.prototype.addReferences = function(mediaPath, cb) {
+        //retrieve the client
+        this.getClient(function(err, s3, settings) {
+            if(util.isError(err)) {
+                return cb(err);
+            }
+
+            var params = {
+                Bucket: pb.config.media.bucket || settings.bucket, /* required */
+                Key: S3MediaProvider.mediaPathTransform(mediaPath), /* required */
+                //            MFA: 'STRING_VALUE',
+                //            VersionId: 'STRING_VALUE'
+            };
+
+            //retrieve metadata
+            s3.headObject(params, function(error, result) {
+                if(util.isError(error) || !result) {
+                    var err = error ? error : new Error('No results returned');
+                    return cb(err);
+                }
+
+                var metadata = result.Metadata || {};
+                var references = metadata.references;
+
+                //if references is undefined, make references 1 because metadata hasn't been created yet so it only exists once
+                if (!references) {
+                    references = "1";
+                }
+                adjustReferencesCount(s3, references, params, true, cb);
+            });
+        });
+    };
+
+    function adjustReferencesCount(s3, references, params, shouldIncrement, cb) {
+        references = parseInt(references);
+        references = shouldIncrement ? (references + 1) : (references - 1);
+        references += "";
+        params.Metadata = {
+            references: references
+        };
+        params.MetadataDirective = 'REPLACE';
+        params.CopySource = encodeURI(params.Bucket + "/" + params.Key);
+        s3.copyObject(params, cb);
+    }
 
     /**
      * Retrieve the stats on the file
