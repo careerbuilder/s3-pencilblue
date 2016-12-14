@@ -320,8 +320,9 @@ module.exports = function S3MediaProviderModule(pb) {
             //retrieve metadata
 
             s3.headObject(params, function(error, result) {
-                if(util.isError(error)) {
-                    return cb(error);
+                if(util.isError(error) || !result) {
+                    var err = error ? error : new Error('No results returned');
+                    return cb(err);
                 }
 
                 var metadata = result.Metadata || {};
@@ -361,8 +362,9 @@ module.exports = function S3MediaProviderModule(pb) {
 
             //retrieve metadata
             s3.headObject(params, function(error, result) {
-                if(util.isError(error)) {
-                    return cb(error);
+                if(util.isError(error) || !result) {
+                    var err = error ? error : new Error('No results returned');
+                    return cb(err);
                 }
 
                 var metadata = result.Metadata || {};
