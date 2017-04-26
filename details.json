@@ -3,7 +3,7 @@
     "name": "Amazon S3",
 	"description": "The Amazon S3 plugin provides a wrapper around the aws-skd module to implement the MediaProvider interface",
     "version": "0.2.0",
-    "pb_version": "0.6.x",
+    "pb_version": ">=0.6.x <1.x",
 	"author": {
 		"name": "PencilBlue, LLC",
 		"email": "info@pencilblue.org",
