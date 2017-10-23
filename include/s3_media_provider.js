@@ -54,8 +54,7 @@ module.exports = function S3MediaProviderModule(pb) {
                 delete setts.accessKeyId;
                 delete setts.secretAccessKey;
             }
-            Aws.config.update(setts);
-            var client = new Aws.S3();
+            var client = new Aws.S3(setts);
             cb(null, client, setts);
         });
     };
